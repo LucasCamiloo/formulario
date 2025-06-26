@@ -124,7 +124,8 @@ function initCTAButton() {
     const ctaButton = document.querySelector('.cta-button');
     if (ctaButton) {
         ctaButton.addEventListener('click', () => {
-            window.location.href = '/form.html'; // ou '/participar' se usar rewrite
+            // Redirecionar para a rota limpa do formulário
+            window.location.href = '/participar';
         });
     }
 }

@@ -397,6 +397,10 @@ function initForm() {
             });
             
             const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || `Erro ${response.status}`);
+            }
             
             if (result.success) {
                 alert(result.message);
@@ -423,7 +427,7 @@ function initForm() {
             }
         } catch (error) {
             console.error('Erro:', error);
-            alert('Erro ao enviar formulário. Tente novamente.');
+            alert(error.message || 'Erro ao enviar formulário. Tente novamente.');
         } finally {
             submitButton.textContent = originalText;
             submitButton.disabled = false;
