@@ -50,6 +50,7 @@ class ImageCarousel {
     }
     
     goToSlide(slideIndex) {
+        if (!this.slides[slideIndex] || !this.indicators[slideIndex]) return;
         // Remover classe ativa de todos os slides e indicadores
         this.slides.forEach(slide => slide.classList.remove('active'));
         this.indicators.forEach(indicator => indicator.classList.remove('active'));
@@ -121,11 +122,9 @@ function initFadeIn() {
 // Ação do botão CTA
 function initCTAButton() {
     const ctaButton = document.querySelector('.cta-button');
-    
     if (ctaButton) {
         ctaButton.addEventListener('click', () => {
-            // Redirecionar para a rota limpa do formulário
-            window.location.href = '/form.html';
+            window.location.href = '/form.html'; // ou '/participar' se usar rewrite
         });
     }
 }

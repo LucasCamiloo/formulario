@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/participar", "destination": "/form.html" }
+  ]
+}
