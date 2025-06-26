@@ -1,0 +1,320 @@
+@font-face {
+    font-family: 'Organetto';
+    src: url('./font/organetto.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Organetto', 'Poppins', sans-serif;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+/* Container principal do carrossel */
+.carousel-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Logo no canto superior esquerdo */
+.logo-container {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    z-index: 100;
+}
+
+.logo {
+    height: 60px;
+    width: auto;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+/* Carrossel */
+.carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+.slide.active {
+    opacity: 1;
+}
+
+.slide-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
+}
+
+/* Conteúdo central */
+.center-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    z-index: 10;
+    max-width: 90%;
+}
+
+.main-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+    letter-spacing: 2px;
+    transition: opacity 0.3s ease;
+    opacity: 0.8;
+}
+
+.sub-title {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: #ffd700;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.prizes-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.prize {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem 2rem;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: float 3s ease-in-out infinite;
+}
+
+.prize:nth-child(2) {
+    animation-delay: 1.5s;
+}
+
+.prize-icon {
+    font-size: 3rem;
+}
+
+.prize-text {
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.prize-text strong {
+    color: #ffd700;
+    font-weight: 800;
+}
+
+@keyframes float {
+    0%, 100% { 
+        transform: translateY(0px); 
+    }
+    50% { 
+        transform: translateY(-10px); 
+    }
+}
+
+/* Botão CTA centralizado */
+.cta-button {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 1.2rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    z-index: 20;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    margin-top: 2rem;
+}
+
+.cta-button:hover {
+    background: rgba(0, 0, 0, 0.35);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Indicadores do carrossel */
+.carousel-indicators {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 15;
+}
+
+.indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.indicator.active {
+    background: #606060;
+    transform: scale(1.2);
+}
+
+.indicator:hover {
+    background: rgba(48, 48, 48, 0.8);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 1.4rem;
+        opacity: 0.8;
+    }
+    
+    .sub-title {
+        font-size: 1.8rem;
+    }
+    
+    .prize {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .prize-text {
+        font-size: 1.1rem;
+    }
+    
+    .cta-button {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .center-content {
+        max-width: 95%;
+    }
+    
+    .logo-container {
+        top: 20px;
+        left: 20px;
+    }
+    
+    .logo {
+        height: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 1.2rem;
+        opacity: 0.8;
+    }
+    
+    .sub-title {
+        font-size: 1.5rem;
+    }
+    
+    .prize-text {
+        font-size: 1rem;
+    }
+    
+    .prize-icon {
+        font-size: 2rem;
+    }
+    
+    .cta-button {
+        padding: 0.8rem 1.2rem;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+    
+    .logo-container {
+        top: 15px;
+        left: 15px;
+    }
+    
+    .logo {
+        height: 70px;
+    }
+}
+
+/* Animação de entrada */
+.center-content {
+    animation: fadeInUp 1.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -40%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+
+
+@keyframes kenBurns {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
