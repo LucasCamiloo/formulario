@@ -26,10 +26,8 @@ const connectDB = async () => {
     }
     
     try {
-        await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        // Removed deprecated options, as they are default in Mongoose v6+
+        await mongoose.connect(process.env.MONGODB_URI);
         isConnected = true;
         console.log('✅ Conectado ao MongoDB com sucesso');
         
