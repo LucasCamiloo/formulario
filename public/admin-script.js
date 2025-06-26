@@ -322,18 +322,219 @@ class AdminPanel {
     viewParticipant(id) {
         const participant = this.participants.find(p => p._id === id);
         if (participant) {
-            const details = `
-Nome: ${participant.name}
-Email: ${participant.email}
-Telefone: ${participant.phone}
-Data de Registro: ${new Date(participant.registrationDate).toLocaleString('pt-BR')}
-Status: ${this.getStatusLabel(participant.status)}
-Dispositivo: ${participant.deviceInfo?.device || 'N/A'}
-Navegador: ${participant.clientInfo?.browser || 'N/A'}
-IP: ${participant.clientInfo?.ip || 'N/A'}
-Email Enviado: ${participant.emailConfirmationSent ? 'Sim' : 'Não'}
+            this.showParticipantModal(participant);
+        }
+    }
+    
+    showParticipantModal(participant) {
+        // Fill modal with participant data
+        document.getElementById('modalName').textContent = participant.name;
+        document.getElementById('modalEmail').textContent = participant.email;
+        document.getElementById('modalPhone').textContent = participant.phone;
+        
+        const statusBadge = document.getElementById('modalStatus');
+        statusBadge.textContent = this.getStatusLabel(participant.status);
+        statusBadge.className = `status-badge status-${participant.status}`;
+        
+        const date = new Date(participant.registrationDate);
+        document.getElementById('modalDate').textContent = date.toLocaleDateString('pt-BR');
+        document.getElementById('modalTime').textContent = date.toLocaleTimeString('pt-BR');
+        
+        document.getElementById('modalDevice').textContent = participant.deviceInfo?.device || 'N/A';
+        document.getElementById('modalBrowser').textContent = participant.clientInfo?.browser || 'N/A';
+        document.getElementById('modalIP').textContent = participant.clientInfo?.ip || 'N/A';
+        document.getElementById('modalResolution').textContent = participant.deviceInfo?.screenResolution || 'N/A';
+        document.getElementById('modalLanguage').textContent = participant.deviceInfo?.language || 'N/A';
+        
+        const emailStatus = document.getElementById('modalEmailSent');
+        emailStatus.textContent = participant.emailConfirmationSent ? 'Enviado' : 'Pendente';
+        emailStatus.className = participant.emailConfirmationSent ? 'email-sent' : 'email-pending';
+        
+        // Show modal
+        document.getElementById('participantModal').style.display = 'block';
+        
+        // Add small delay before loading geolocation to ensure modal is rendered
+        setTimeout(() => {
+            this.loadGeolocation(participant.clientInfo?.ip || '127.0.0.1');
+        }, 100);
+    }
+    
+    async loadGeolocation(ip) {
+        try {
+            // Reset location info
+            document.getElementById('modalCountry').textContent = 'Carregando...';
+            document.getElementById('modalRegion').textContent = 'Carregando...';
+            document.getElementById('modalCity').textContent = 'Carregando...';
+            document.getElementById('modalISP').textContent = 'Carregando...';
+            
+            // Initialize map
+            const mapContainer = document.getElementById('map');
+            mapContainer.innerHTML = '<div class="loading-map"><i class="fas fa-spinner"></i> Carregando mapa...</div>';
+            
+            let locationData = null;
+            
+            // Try multiple APIs in order
+            const apis = [
+                {
+                    name: 'ipapi.co',
+                    url: `https://ipapi.co/${ip}/json/`,
+                    parseData: (data) => ({
+                        country: data.country_name,
+                        region: data.region,
+                        city: data.city,
+                        isp: data.org,
+                        lat: data.latitude,
+                        lng: data.longitude,
+                        error: data.error
+                    })
+                },
+                {
+                    name: 'ip-api.com',
+                    url: `http://ip-api.com/json/${ip}`,
+                    parseData: (data) => ({
+                        country: data.country,
+                        region: data.regionName,
+                        city: data.city,
+                        isp: data.isp,
+                        lat: data.lat,
+                        lng: data.lon,
+                        error: data.status === 'fail' ? data.message : null
+                    })
+                },
+                {
+                    name: 'ipinfo.io',
+                    url: `https://ipinfo.io/${ip}/json`,
+                    parseData: (data) => {
+                        const [lat, lng] = (data.loc || '0,0').split(',').map(Number);
+                        return {
+                            country: data.country,
+                            region: data.region,
+                            city: data.city,
+                            isp: data.org,
+                            lat: lat,
+                            lng: lng,
+                            error: data.error
+                        };
+                    }
+                },
+                {
+                    name: 'freegeoip.app',
+                    url: `https://freegeoip.app/json/${ip}`,
+                    parseData: (data) => ({
+                        country: data.country_name,
+                        region: data.region_name,
+                        city: data.city,
+                        isp: 'N/A',
+                        lat: data.latitude,
+                        lng: data.longitude,
+                        error: null
+                    })
+                }
+            ];
+            
+            // Try each API until one works
+            for (const api of apis) {
+                try {
+                    console.log(`Tentando API: ${api.name}`);
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                    
+                    const response = await fetch(api.url, {
+                        signal: controller.signal,
+                        mode: 'cors'
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    locationData = api.parseData(data);
+                    
+                    if (locationData.error) {
+                        throw new Error(locationData.error);
+                    }
+                    
+                    if (locationData.lat && locationData.lng) {
+                        console.log(`Sucesso com API: ${api.name}`, locationData);
+                        break;
+                    }
+                } catch (error) {
+                    console.warn(`API ${api.name} falhou:`, error.message);
+                    continue;
+                }
+            }
+            
+            // If no API worked, try a fallback with mock data for local IPs
+            if (!locationData || (!locationData.lat && !locationData.lng)) {
+                if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+                    locationData = {
+                        country: 'Brasil',
+                        region: 'São Paulo',
+                        city: 'São Paulo',
+                        isp: 'Rede Local',
+                        lat: -23.5505,
+                        lng: -46.6333
+                    };
+                } else {
+                    throw new Error('Nenhuma API de geolocalização funcionou');
+                }
+            }
+            
+            // Update location info
+            document.getElementById('modalCountry').textContent = locationData.country || 'N/A';
+            document.getElementById('modalRegion').textContent = locationData.region || 'N/A';
+            document.getElementById('modalCity').textContent = locationData.city || 'N/A';
+            document.getElementById('modalISP').textContent = locationData.isp || 'N/A';
+            
+            // Initialize Leaflet map
+            mapContainer.innerHTML = '';
+            const map = L.map('map').setView([locationData.lat, locationData.lng], 10);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Add marker
+            const marker = L.marker([locationData.lat, locationData.lng]).addTo(map);
+            const popupContent = `
+                <b>${locationData.city || 'Localização'}</b><br>
+                ${locationData.region || ''}<br>
+                ${locationData.country || ''}<br>
+                <small>IP: ${ip}</small>
             `;
-            alert(details);
+            marker.bindPopup(popupContent).openPopup();
+            
+            // Add accuracy disclaimer
+            const disclaimer = document.createElement('div');
+            disclaimer.style.cssText = 'font-size: 12px; color: #666; text-align: center; margin-top: 10px; font-style: italic;';
+            disclaimer.textContent = '* Localização aproximada baseada no endereço IP';
+            mapContainer.appendChild(disclaimer);
+            
+        } catch (error) {
+            console.error('Erro ao carregar geolocalização:', error);
+            
+            // Show error state
+            document.getElementById('modalCountry').textContent = 'Indisponível';
+            document.getElementById('modalRegion').textContent = 'Indisponível';
+            document.getElementById('modalCity').textContent = 'Indisponível';
+            document.getElementById('modalISP').textContent = 'Indisponível';
+            
+            const mapContainer = document.getElementById('map');
+            mapContainer.innerHTML = `
+                <div class="loading-map">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i> 
+                    <div style="margin-top: 10px;">
+                        <strong>Não foi possível carregar a localização</strong><br>
+                        <small style="color: #666;">IP: ${ip}</small><br>
+                        <small style="color: #666;">Motivo: ${error.message}</small>
+                    </div>
+                </div>
+            `;
         }
     }
     
@@ -406,6 +607,24 @@ function deleteSelected() {
 function closeModal() {
     document.getElementById('confirmModal').style.display = 'none';
 }
+
+function closeParticipantModal() {
+    document.getElementById('participantModal').style.display = 'none';
+}
+
+// Close modals when clicking outside
+window.addEventListener('click', (e) => {
+    const confirmModal = document.getElementById('confirmModal');
+    const participantModal = document.getElementById('participantModal');
+    
+    if (e.target === confirmModal) {
+        closeModal();
+    }
+    
+    if (e.target === participantModal) {
+        closeParticipantModal();
+    }
+});
 
 // Initialize admin panel
 let adminPanel;

@@ -6,6 +6,7 @@
     <title>Painel Administrativo - Desafio SWS</title>
     <link rel="stylesheet" href="admin-styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <div class="admin-container">
@@ -160,6 +161,106 @@
         </div>
     </div>
 
+    <!-- Participant Details Modal -->
+    <div id="participantModal" class="modal">
+        <div class="modal-content participant-modal">
+            <span class="close" onclick="closeParticipantModal()">&times;</span>
+            <h3>Detalhes do Participante</h3>
+            
+            <div class="participant-details">
+                <div class="details-section">
+                    <h4><i class="fas fa-user"></i> Informações Pessoais</h4>
+                    <div class="detail-item">
+                        <label>Nome:</label>
+                        <span id="modalName">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span id="modalEmail">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Telefone:</label>
+                        <span id="modalPhone">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Status:</label>
+                        <span id="modalStatus" class="status-badge">-</span>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h4><i class="fas fa-calendar"></i> Data de Registro</h4>
+                    <div class="detail-item">
+                        <label>Data:</label>
+                        <span id="modalDate">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Hora:</label>
+                        <span id="modalTime">-</span>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h4><i class="fas fa-desktop"></i> Informações Técnicas</h4>
+                    <div class="detail-item">
+                        <label>Dispositivo:</label>
+                        <span id="modalDevice">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Navegador:</label>
+                        <span id="modalBrowser">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>IP:</label>
+                        <span id="modalIP">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Resolução:</label>
+                        <span id="modalResolution">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Idioma:</label>
+                        <span id="modalLanguage">-</span>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h4><i class="fas fa-envelope"></i> Email</h4>
+                    <div class="detail-item">
+                        <label>Confirmação enviada:</label>
+                        <span id="modalEmailSent" class="email-status">-</span>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> Localização Aproximada</h4>
+                    <div id="mapContainer" class="map-container">
+                        <div id="map"></div>
+                        <div id="locationInfo" class="location-info">
+                            <div class="detail-item">
+                                <label>País:</label>
+                                <span id="modalCountry">Carregando...</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Região:</label>
+                                <span id="modalRegion">Carregando...</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Cidade:</label>
+                                <span id="modalCity">Carregando...</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>ISP:</label>
+                                <span id="modalISP">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="admin-script.js"></script>
 </body>
 </html>
