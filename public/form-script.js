@@ -6,6 +6,13 @@ class FormCarousel {
         this.slideInterval = null;
         this.isPaused = false;
         
+        // Validar número de slides
+        if (this.slides.length === 0) {
+            console.warn('Nenhum slide encontrado no formulário');
+            return;
+        }
+        
+        console.log(`FormCarousel inicializado com ${this.slides.length} slides`);
         this.init();
     }
     
@@ -16,6 +23,12 @@ class FormCarousel {
     }
     
     goToSlide(slideIndex) {
+        // Verificar se o slide existe
+        if (slideIndex >= this.slides.length || slideIndex < 0) {
+            console.warn(`Slide ${slideIndex} não existe. Máximo: ${this.slides.length - 1}`);
+            return;
+        }
+        
         this.slides.forEach(slide => slide.classList.remove('active'));
         this.slides[slideIndex].classList.add('active');
         this.currentSlide = slideIndex;
@@ -218,7 +231,7 @@ function generateReceiptPDF(userData) {
         },
         {
             title: '8. Premiação',
-            content: 'a) Carro Zero – BYD Dolphin Mini\n• O veículo será adquirido pela SWS Group e entregue ao ganhador, com todos os custos de aquisição, documentação, IPVA e emplacamento pagos pela empresa.\n• A entrega será realizada de acordo com a disponibilidade da concessionária.\n• A SWS Group não se responsabiliza por qualquer tipo de manutenção, problemas técnicos, avarias, acidentes, sinistros ou danos físicos e materiais ocorridos após a entrega do veículo ao ganhador, inclusive danos causados a terceiros.\n• Não será fornecido seguro do automóvel, sendo esta responsabilidade integral do ganhador.\n• O prêmio é pessoal e intransferível, não podendo ser convertido em dinheiro.\n\nb) Meta VOE – Vale-Viagem de R$ 10.000,00\n• O valor será creditado em cartão de benefícios da agência World 360 Tur, até o dia 31 de agosto de 2025.\n• O crédito poderá ser utilizado:\no Integralmente em uma única viagem;\no De forma parcelada em mais de um serviço/oferta;\no Como parte de pagamento/abatimento de pacotes superiores ao valor de R$ 10.000,00.\n• O valor será válido por 18 meses a partir da data de entrega do cartão.\n• A SWS Group não se responsabiliza por:\no Custos com documentação pessoal (passaporte, vistos etc.);\no Alimentação, transfers, taxas de embarque e serviços extras;\no Cancelamentos, remarcações, atrasos de voo, problemas de hospedagem ou qualquer contratempo relacionado à viagem escolhida pelo ganhador.\n• Após a entrega do cartão, todas as decisões, contratações e responsabilidades relativas à utilização do benefício passam a ser exclusivas do ganhador.'
+            content: 'a) Carro Zero – BYD Dolphin Mini\n• O veículo será adquirido pela SWS Group e entregue ao ganhador, com todos os custos de aquisição, documentação, IPVA e emplacamento pagos pela empresa.\n• O modelo premiado será o BYD Dolphin Mini, com 5 lugares, na cor Apricity White (branco), com interior Dark Blue e rodas de liga leve de 16 polegadas.\n• O prêmio será entregue com os itens de série definidos pela montadora para o modelo em questão, não sendo contemplados opcionais adicionais.\n• A entrega será realizada de acordo com a disponibilidade da concessionária, podendo haver prazo variável conforme cronograma da montadora.\n• A SWS Group não se responsabiliza por qualquer tipo de manutenção, problemas técnicos, avarias, acidentes, sinistros ou danos físicos e materiais ocorridos após a entrega do veículo ao ganhador, inclusive danos causados a terceiros.\n• Não será fornecido seguro do automóvel, sendo esta responsabilidade integral do ganhador.\n• O prêmio é pessoal e intransferível, não podendo ser convertido em dinheiro.\n• A SWS Group não se responsabiliza por eventuais impactos fiscais na declaração de Imposto de Renda do ganhador, que deverá avaliar individualmente a inclusão do bem em seu patrimônio e as obrigações decorrentes.\n\nb) Meta VOE – Vale-Viagem de R$ 10.000,00\n• O valor será creditado em cartão de benefícios da agência World 360 Tur, até o dia 31 de agosto de 2025.\n• O crédito poderá ser utilizado:\no Integralmente em uma única viagem;\no De forma parcelada em mais de um serviço/oferta;\no Como parte de pagamento/abatimento de pacotes superiores ao valor de R$ 10.000,00.\n• O valor será válido por 18 meses a partir da data de entrega do cartão.\n• A SWS Group não se responsabiliza por:\no Custos com documentação pessoal (passaporte, vistos etc.);\no Alimentação, transfers, taxas de embarque e serviços extras;\no Cancelamentos, remarcações, atrasos de voo, problemas de hospedagem ou qualquer contratempo relacionado à viagem escolhida pelo ganhador.\n• Após a entrega do cartão, todas as decisões, contratações e responsabilidades relativas à utilização do benefício passam a ser exclusivas do ganhador.'
         },
         {
             title: '9. Divulgação dos Resultados',

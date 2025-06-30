@@ -3,27 +3,19 @@ class ImageCarousel {
     constructor() {
         this.slides = document.querySelectorAll('.slide');
         this.indicators = document.querySelectorAll('.indicator');
-        this.slideText = document.getElementById('slideText');
         this.currentSlide = 0;
         this.slideInterval = null;
         this.isInitialized = false;
-        
-        // Textos para cada slide
-        this.slideTexts = [
-            "CADA VENDA TE COLOCA MAIS PERTO DA DIREÇÃO CERTA.",
-            "PRA QUEM ACELERA NAS METAS, A RECOMPENSA VEM COM CHAVE NA MÃO.",
-            "CHEGAR LÁ DEPENDE DE VOCÊ.",
-            "DEU ESFORÇO TE LEVA LONGE",
-            "VOCÊ PODE SER O PRÓXIMO",
-            "OPORTUNIDADE ÚNICA",
-            "CADASTRE-SE AGORA",
-            "NÃO PERCA ESSA CHANCE"
-        ];
         
         this.init();
     }
     
     init() {
+        // Validar se temos o número correto de slides e indicadores
+        if (this.slides.length !== this.indicators.length) {
+            console.warn(`Slides (${this.slides.length}) e indicadores (${this.indicators.length}) não coincidem`);
+        }
+        
         // Aguardar um pouco antes de iniciar para garantir que tudo está carregado
         setTimeout(() => {
             this.startAutoSlide();
@@ -50,7 +42,12 @@ class ImageCarousel {
     }
     
     goToSlide(slideIndex) {
-        if (!this.slides[slideIndex] || !this.indicators[slideIndex]) return;
+        // Verificar se o slide existe
+        if (!this.slides[slideIndex] || !this.indicators[slideIndex]) {
+            console.warn(`Slide ${slideIndex} não existe`);
+            return;
+        }
+        
         // Remover classe ativa de todos os slides e indicadores
         this.slides.forEach(slide => slide.classList.remove('active'));
         this.indicators.forEach(indicator => indicator.classList.remove('active'));
@@ -59,25 +56,7 @@ class ImageCarousel {
         this.slides[slideIndex].classList.add('active');
         this.indicators[slideIndex].classList.add('active');
         
-        // Atualizar o texto com animação
-        this.updateSlideText(slideIndex);
-        
         this.currentSlide = slideIndex;
-    }
-    
-    updateSlideText(slideIndex) {
-        if (this.slideText && this.slideTexts[slideIndex]) {
-            // Animação de fade out
-            this.slideText.style.opacity = '0';
-            
-            setTimeout(() => {
-                // Atualizar texto
-                this.slideText.textContent = this.slideTexts[slideIndex];
-                
-                // Animação de fade in
-                this.slideText.style.opacity = '0.8';
-            }, 300);
-        }
     }
     
     nextSlide() {
@@ -131,6 +110,27 @@ function initCTAButton() {
 }
 
 // Inicializar tudo quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM carregado, inicializando carrossel principal...');
+    
+    // Iniciar fade in
+    initFadeIn();
+    
+    // Iniciar botão CTA
+    initCTAButton();
+    
+    // Aguardar um pouco mais antes de iniciar o carrossel para evitar conflitos
+    setTimeout(() => {
+        new ImageCarousel();
+    }, 500);
+});
+
+// Prevenir que a página seja carregada sem o fade in
+document.addEventListener('readystatechange', () => {
+    if (document.readyState === 'loading') {
+        document.body.style.opacity = '0';
+    }
+});
 document.addEventListener('DOMContentLoaded', () => {
     // Iniciar fade in
     initFadeIn();

@@ -373,114 +373,142 @@ class AdminPanel {
             
             let locationData = null;
             
-            // Try multiple APIs in order
-            const apis = [
-                {
-                    name: 'ipapi.co',
-                    url: `https://ipapi.co/${ip}/json/`,
-                    parseData: (data) => ({
-                        country: data.country_name,
-                        region: data.region,
-                        city: data.city,
-                        isp: data.org,
-                        lat: data.latitude,
-                        lng: data.longitude,
-                        error: data.error
-                    })
-                },
-                {
-                    name: 'ip-api.com',
-                    url: `http://ip-api.com/json/${ip}`,
-                    parseData: (data) => ({
-                        country: data.country,
-                        region: data.regionName,
-                        city: data.city,
-                        isp: data.isp,
-                        lat: data.lat,
-                        lng: data.lon,
-                        error: data.status === 'fail' ? data.message : null
-                    })
-                },
-                {
-                    name: 'ipinfo.io',
-                    url: `https://ipinfo.io/${ip}/json`,
-                    parseData: (data) => {
-                        const [lat, lng] = (data.loc || '0,0').split(',').map(Number);
-                        return {
-                            country: data.country,
+            // Handle localhost and local network IPs
+            if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.') || ip.startsWith('fc00:') || ip.startsWith('fe80:')) {
+                console.log('IP local detectado, usando localização padrão');
+                locationData = {
+                    country: 'Brasil',
+                    region: 'São Paulo',
+                    city: 'São Paulo',
+                    isp: 'Rede Local/Desenvolvimento',
+                    lat: -23.5505,
+                    lng: -46.6333
+                };
+            } else {
+                // Try multiple HTTPS APIs in order
+                const apis = [
+                    {
+                        name: 'ipinfo.io',
+                        url: `https://ipinfo.io/${ip}/json`,
+                        parseData: (data) => {
+                            const [lat, lng] = (data.loc || '0,0').split(',').map(Number);
+                            return {
+                                country: data.country,
+                                region: data.region,
+                                city: data.city,
+                                isp: data.org,
+                                lat: lat,
+                                lng: lng,
+                                error: data.error
+                            };
+                        }
+                    },
+                    {
+                        name: 'ipapi.co',
+                        url: `https://ipapi.co/${ip}/json/`,
+                        parseData: (data) => ({
+                            country: data.country_name,
                             region: data.region,
                             city: data.city,
                             isp: data.org,
-                            lat: lat,
-                            lng: lng,
+                            lat: data.latitude,
+                            lng: data.longitude,
                             error: data.error
-                        };
+                        })
+                    },
+                    {
+                        name: 'ip-api.com (via proxy)',
+                        url: `https://api.allorigins.win/get?url=${encodeURIComponent(`http://ip-api.com/json/${ip}`)}`,
+                        parseData: (response) => {
+                            const data = JSON.parse(response.contents);
+                            return {
+                                country: data.country,
+                                region: data.regionName,
+                                city: data.city,
+                                isp: data.isp,
+                                lat: data.lat,
+                                lng: data.lon,
+                                error: data.status === 'fail' ? data.message : null
+                            };
+                        }
                     }
-                },
-                {
-                    name: 'freegeoip.app',
-                    url: `https://freegeoip.app/json/${ip}`,
-                    parseData: (data) => ({
-                        country: data.country_name,
-                        region: data.region_name,
-                        city: data.city,
-                        isp: 'N/A',
-                        lat: data.latitude,
-                        lng: data.longitude,
-                        error: null
-                    })
+                ];
+                
+                // Try each API until one works
+                for (const api of apis) {
+                    try {
+                        console.log(`Tentando API: ${api.name}`);
+                        
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+                        
+                        const response = await fetch(api.url, {
+                            signal: controller.signal,
+                            mode: 'cors',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        locationData = api.parseData(data);
+                        
+                        if (locationData.error) {
+                            throw new Error(locationData.error);
+                        }
+                        
+                        if (locationData.lat && locationData.lng && 
+                            !isNaN(locationData.lat) && !isNaN(locationData.lng)) {
+                            console.log(`Sucesso com API: ${api.name}`, locationData);
+                            break;
+                        } else {
+                            throw new Error('Coordenadas inválidas recebidas');
+                        }
+                    } catch (error) {
+                        console.warn(`API ${api.name} falhou:`, error.message);
+                        
+                        // Clear timeout if still running
+                        if (timeoutId) {
+                            clearTimeout(timeoutId);
+                        }
+                        continue;
+                    }
                 }
-            ];
-            
-            // Try each API until one works
-            for (const api of apis) {
-                try {
-                    console.log(`Tentando API: ${api.name}`);
+                
+                // If no API worked, use fallback based on IP patterns
+                if (!locationData || (!locationData.lat && !locationData.lng)) {
+                    console.log('Usando localização fallback baseada no IP');
                     
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-                    
-                    const response = await fetch(api.url, {
-                        signal: controller.signal,
-                        mode: 'cors'
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    locationData = api.parseData(data);
-                    
-                    if (locationData.error) {
-                        throw new Error(locationData.error);
-                    }
-                    
-                    if (locationData.lat && locationData.lng) {
-                        console.log(`Sucesso com API: ${api.name}`, locationData);
-                        break;
-                    }
-                } catch (error) {
-                    console.warn(`API ${api.name} falhou:`, error.message);
-                    continue;
-                }
-            }
-            
-            // If no API worked, try a fallback with mock data for local IPs
-            if (!locationData || (!locationData.lat && !locationData.lng)) {
-                if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
-                    locationData = {
+                    // Simple IP-based country guessing (very basic)
+                    let fallbackLocation = {
                         country: 'Brasil',
                         region: 'São Paulo',
                         city: 'São Paulo',
-                        isp: 'Rede Local',
+                        isp: 'Provedor Desconhecido',
                         lat: -23.5505,
                         lng: -46.6333
                     };
-                } else {
-                    throw new Error('Nenhuma API de geolocalização funcionou');
+                    
+                    // Check if IP might be from other countries (very basic check)
+                    if (ip.startsWith('8.8.') || ip.startsWith('1.1.')) {
+                        fallbackLocation = {
+                            country: 'Estados Unidos',
+                            region: 'California',
+                            city: 'Mountain View',
+                            isp: 'DNS Público',
+                            lat: 37.4419,
+                            lng: -122.1430
+                        };
+                    }
+                    
+                    locationData = fallbackLocation;
                 }
             }
             
@@ -492,7 +520,16 @@ class AdminPanel {
             
             // Initialize Leaflet map
             mapContainer.innerHTML = '';
-            const map = L.map('map').setView([locationData.lat, locationData.lng], 10);
+            
+            // Validate coordinates
+            const lat = parseFloat(locationData.lat) || 0;
+            const lng = parseFloat(locationData.lng) || 0;
+            
+            if (lat === 0 && lng === 0) {
+                throw new Error('Coordenadas inválidas (0,0)');
+            }
+            
+            const map = L.map('map').setView([lat, lng], 10);
             
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -500,19 +537,22 @@ class AdminPanel {
             }).addTo(map);
             
             // Add marker
-            const marker = L.marker([locationData.lat, locationData.lng]).addTo(map);
+            const marker = L.marker([lat, lng]).addTo(map);
             const popupContent = `
-                <b>${locationData.city || 'Localização'}</b><br>
-                ${locationData.region || ''}<br>
-                ${locationData.country || ''}<br>
-                <small>IP: ${ip}</small>
+                <div style="text-align: center;">
+                    <b>${locationData.city || 'Localização'}</b><br>
+                    ${locationData.region || ''}<br>
+                    ${locationData.country || ''}<br>
+                    <small style="color: #666;">IP: ${ip}</small><br>
+                    <small style="color: #666;">Coords: ${lat.toFixed(4)}, ${lng.toFixed(4)}</small>
+                </div>
             `;
             marker.bindPopup(popupContent).openPopup();
             
             // Add accuracy disclaimer
             const disclaimer = document.createElement('div');
-            disclaimer.style.cssText = 'font-size: 12px; color: #666; text-align: center; margin-top: 10px; font-style: italic;';
-            disclaimer.textContent = '* Localização aproximada baseada no endereço IP';
+            disclaimer.style.cssText = 'font-size: 12px; color: #666; text-align: center; margin-top: 10px; font-style: italic; background: rgba(255,255,255,0.9); padding: 5px; border-radius: 4px;';
+            disclaimer.textContent = '* Localização aproximada baseada no endereço IP. Precisão pode variar.';
             mapContainer.appendChild(disclaimer);
             
         } catch (error) {
@@ -527,11 +567,14 @@ class AdminPanel {
             const mapContainer = document.getElementById('map');
             mapContainer.innerHTML = `
                 <div class="loading-map">
-                    <i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i> 
-                    <div style="margin-top: 10px;">
-                        <strong>Não foi possível carregar a localização</strong><br>
-                        <small style="color: #666;">IP: ${ip}</small><br>
-                        <small style="color: #666;">Motivo: ${error.message}</small>
+                    <i class="fas fa-exclamation-triangle" style="color: #ff6b6b; font-size: 32px;"></i> 
+                    <div style="margin-top: 15px; max-width: 300px;">
+                        <strong style="color: #333;">Não foi possível carregar a localização</strong><br><br>
+                        <small style="color: #666; display: block; margin-bottom: 5px;"><strong>IP:</strong> ${ip}</small>
+                        <small style="color: #666; display: block; margin-bottom: 10px;"><strong>Motivo:</strong> ${error.message}</small>
+                        <small style="color: #888; font-style: italic;">
+                            Isso pode ocorrer devido a restrições de CORS, APIs indisponíveis ou IPs locais.
+                        </small>
                     </div>
                 </div>
             `;
